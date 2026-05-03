@@ -1,0 +1,27 @@
+kind = "mobile"
+previewPath = "/"
+title = "Stately"
+version = "1.0.0"
+id = "artifacts/stately"
+router = "expo-domain"
+
+[[integratedSkills]]
+name = "expo"
+version = "1.0.0"
+
+[[services]]
+ensurePreviewReachable = "/status"
+name = "expo"
+paths = [ "/" ]
+localPort = 21820
+
+[services.development]
+run = "pnpm --filter @workspace/stately run dev"
+
+[services.production]
+build = [ "pnpm", "--filter", "@workspace/stately", "run", "build" ]
+run = [ "pnpm", "--filter", "@workspace/stately", "run", "serve" ]
+
+[services.env]
+PORT = "21820"
+BASE_PATH = "/"

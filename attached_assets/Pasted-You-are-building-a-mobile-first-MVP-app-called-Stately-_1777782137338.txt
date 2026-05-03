@@ -1,0 +1,284 @@
+You are building a mobile-first MVP app called “Stately”.
+
+Stately is an AI condition coach app.
+Slogan: “Clarity for your body.”
+
+The app helps users understand their daily physical condition based on activity, sleep, and HRV.
+It calculates a daily condition score and gives a simple AI coaching message every morning.
+
+Important:
+This is the first MVP version.
+Do NOT implement real Apple HealthKit, Samsung Health, or Google Fit integration yet.
+Instead, use manual input and mock/sample data.
+The structure should be ready for future health data integration.
+
+Use this tech stack:
+- Frontend: React Native with Expo
+- Language: TypeScript if possible
+- Backend: Simple Node.js/Express API or serverless-style API inside the Replit project
+- Database: Use local mock data first, but structure the code so it can later be connected to Firebase Firestore
+- AI: Prepare an API function for AI coach feedback, but use mock AI responses for now unless an OpenAI API key is provided
+
+Design style:
+- Apple Health × Calm inspired
+- Minimal, premium, calm, clean
+- White background with soft navy and mint sage accents
+- Main colors:
+  - Navy: #1B2430
+  - Mint Sage: #88D3C3
+  - Soft Background: #F7F9FA
+  - Text Dark: #111827
+  - Text Gray: #6B7280
+- Use rounded cards, subtle shadows, spacious layout
+- Avoid heavy gradients
+- The app should feel quiet, trustworthy, and health-focused
+- Use SF Pro-like typography if possible; otherwise use system font
+- Mobile-first layout
+
+Core user flow:
+1. User opens the app
+2. Onboarding explains the value of Stately
+3. User goes to the home screen
+4. User inputs daily data:
+   - activity score or active calories
+   - sleep score or sleep hours/efficiency/deep sleep
+   - HRV value
+5. App calculates condition score
+6. App shows:
+   - today’s condition score
+   - status label
+   - AI coach advice
+   - mini 7-day graph
+7. User can view history
+8. User can open settings
+
+Screens to build:
+
+1. Onboarding Screen
+- App name: Stately
+- Slogan: “Clarity for your body.”
+- Short description:
+  “Understand your recovery, energy, and stress signals every morning.”
+- CTA button: “Get Started”
+- Design: minimal Apple-style intro screen
+
+2. Home Screen
+Show:
+- Greeting text: “Good morning”
+- Today’s condition score in a large circular or card-style score display
+- Status label based on condition score:
+  - 85–100: “Excellent Recovery”
+  - 70–84: “Good Condition”
+  - 50–69: “Moderate Fatigue”
+  - 0–49: “Recovery Needed”
+- AI coach message card
+Examples:
+  - “Your recovery looks strong today. A light workout would be a good choice.”
+  - “Your sleep recovery is not ideal. Keep today’s training light.”
+  - “Your HRV signal is low. Reduce caffeine and prioritize rest.”
+- Three small metric cards:
+  - Activity
+  - Sleep
+  - HRV
+- Mini 7-day condition graph
+- Button: “Add Today’s Data”
+
+3. Daily Input Screen
+Allow user to input:
+- Active calories
+- Goal calories
+- Sleep hours
+- Sleep efficiency percentage
+- Deep sleep percentage or deep sleep score
+- HRV value
+- HRV reliability: Green / Amber / Red
+
+When user taps “Calculate Condition”:
+Calculate:
+activity_score = clamp((activeKcal / goalKcal) * 100, 0, 120)
+
+sleep_score = 
+0.20 * sleep_time_score + 
+0.45 * sleep_efficiency_score + 
+0.35 * deep_sleep_score
+
+For MVP:
+- Convert sleep hours to sleep_time_score:
+  - 8 hours or more = 100
+  - 6 hours = 75
+  - 5 hours = 60
+  - under 5 hours = 45
+- Use sleep efficiency directly as sleep_efficiency_score
+- Use deep sleep input directly as deep_sleep_score
+
+For HRV score in MVP:
+Use a simplified version:
+- HRV >= 70: 90
+- HRV >= 55: 75
+- HRV >= 40: 60
+- HRV >= 30: 45
+- HRV < 30: 30
+
+Final condition score:
+condition = 0.30 * activity_score + 0.40 * sleep_score + 0.30 * hrv_score
+
+If HRV reliability is Red:
+Adjust weights:
+condition = 0.35 * activity_score + 0.50 * sleep_score + 0.15 * hrv_score
+
+If HRV reliability is Amber:
+Adjust weights:
+condition = 0.32 * activity_score + 0.43 * sleep_score + 0.25 * hrv_score
+
+Clamp final score between 0 and 100.
+
+Save the calculated result to local state/mock history.
+
+4. History Screen
+Show recent daily condition records.
+Each record should display:
+- Date
+- Condition score
+- Status label
+- Activity score
+- Sleep score
+- HRV score
+- Short AI advice preview
+
+5. Graph Screen
+Show a clean 7-day line chart for:
+- Condition score
+- Activity
+- Sleep
+- HRV
+
+Use a simple chart library if available.
+If chart setup is difficult, create a clean custom mini graph using simple views/bars.
+
+6. Settings Screen
+Show:
+- Profile placeholder
+- Data sync status: “Manual input mode”
+- Future integration section:
+  - Apple Health: Coming soon
+  - Samsung Health: Coming soon
+- Morning reminder toggle UI only
+- App version: MVP 0.1
+
+Navigation:
+Use bottom tab navigation:
+- Home
+- Input
+- History
+- Settings
+
+Data model:
+Create a TypeScript interface like:
+
+DailyRecord {
+  id: string;
+  date: string;
+  activity: {
+    activeKcal: number;
+    goalKcal: number;
+    score: number;
+  };
+  sleep: {
+    hours: number;
+    efficiency: number;
+    deepSleepScore: number;
+    score: number;
+  };
+  hrv: {
+    value: number;
+    reliability: "green" | "amber" | "red";
+    score: number;
+  };
+  condition: {
+    score: number;
+    label: string;
+    weights: {
+      activity: number;
+      sleep: number;
+      hrv: number;
+    };
+  };
+  ai: {
+    advice: string;
+    cached: boolean;
+  };
+}
+
+AI coach logic:
+For MVP, generate advice with rule-based mock logic.
+
+Rules:
+- If condition score >= 85:
+  “Your body looks well recovered today. A productive training day is possible.”
+- If condition score >= 70:
+  “You are in good condition. Keep your workout moderate and stay hydrated.”
+- If condition score >= 50:
+  “Your body shows some fatigue. Choose light cardio or mobility work today.”
+- If condition score < 50:
+  “Recovery should be your priority today. Reduce training intensity and focus on sleep.”
+
+Also consider weakest metric:
+- If sleep score is lowest:
+  mention sleep recovery
+- If HRV score is lowest:
+  mention stress, caffeine, or relaxation
+- If activity score is too high:
+  mention accumulated fatigue
+- If activity score is too low:
+  mention light movement
+
+Backend:
+Create simple API routes if possible:
+- GET /api/health
+- POST /api/condition/score
+- POST /api/ai-coach
+- GET /api/history
+
+For now, the frontend can calculate locally, but structure the calculation logic in a reusable file:
+- utils/calculateCondition.ts
+- utils/generateAdvice.ts
+- types/DailyRecord.ts
+
+Project structure:
+Create a clean folder structure:
+- app or src
+  - screens
+  - components
+  - utils
+  - types
+  - data
+  - styles
+
+Components to create:
+- ScoreCard
+- MetricCard
+- AdviceCard
+- MiniGraph
+- StatusBadge
+- PrimaryButton
+- ScreenContainer
+
+Important UI requirements:
+- Every screen should look polished
+- Use large spacing and rounded cards
+- Use calm health-app style
+- No clutter
+- No childish colors
+- Make it feel like an early Apple Health / WHOOP / Calm-inspired MVP
+- The Home screen should be the most polished screen
+
+Do not overcomplicate the app.
+Prioritize a beautiful working MVP over too many features.
+
+After building, make sure:
+- The app runs without errors
+- The user can input data
+- The condition score updates
+- The AI advice updates
+- The history screen shows saved records
+- The UI looks premium and simple
