@@ -125,6 +125,10 @@ export default function InputScreen() {
         advice,
         cached: true,
       },
+      flags: {
+        ready_for_morning: true,
+        completed: true,
+      },
     };
 
     await addRecord(record);

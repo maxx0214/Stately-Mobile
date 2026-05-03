@@ -30,4 +30,8 @@ export interface DailyRecord {
     advice: string;
     cached: boolean;
   };
+  flags: {
+    ready_for_morning: boolean;
+    completed: boolean;
+  };
 }

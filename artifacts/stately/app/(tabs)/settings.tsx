@@ -4,7 +4,6 @@ import {
   Text,
   StyleSheet,
   ScrollView,
-  TouchableOpacity,
   Switch,
   Platform,
 } from "react-native";
@@ -12,6 +11,7 @@ import { Feather } from "@expo/vector-icons";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import * as Haptics from "expo-haptics";
 import { useColors } from "@/hooks/useColors";
+import { useRecords } from "@/context/RecordsContext";
 
 type FeatherIconName = keyof typeof Feather.glyphMap;
 
@@ -123,7 +123,9 @@ function SettingSection({
 export default function SettingsScreen() {
   const colors = useColors();
   const insets = useSafeAreaInsets();
+  const { source } = useRecords();
   const [morningReminder, setMorningReminder] = useState(false);
+  const isFirestore = source === "firestore";
 
   const topPadding = Platform.OS === "web" ? 67 : insets.top;
   const bottomPadding = Platform.OS === "web" ? 34 : insets.bottom;
@@ -160,12 +162,42 @@ export default function SettingsScreen() {
           <Text style={styles.profileName}>Your Profile</Text>
           <Text style={styles.profileSub}>MVP User</Text>
         </View>
-        <View style={[styles.syncBadge, { backgroundColor: "#FFFFFF15" }]}>
-          <Text style={styles.syncText}>Manual Mode</Text>
+        <View
+          style={[
+            styles.syncBadge,
+            { backgroundColor: isFirestore ? `${colors.primary}25` : "#FFFFFF15" },
+          ]}
+        >
+          <View
+            style={[
+              styles.syncDot,
+              { backgroundColor: isFirestore ? colors.primary : "#FFFFFF40" },
+            ]}
+          />
+          <Text
+            style={[
+              styles.syncText,
+              { color: isFirestore ? colors.primary : "#FFFFFF80" },
+            ]}
+          >
+            {isFirestore ? "Firestore" : "Local"}
+          </Text>
         </View>
       </View>
 
       <SettingSection title="DATA SYNC" colors={colors}>
+        <SettingRow
+          icon="database"
+          label="Storage"
+          value={isFirestore ? "Firebase Firestore" : "Local only"}
+          colors={colors}
+        />
+        <SettingRow
+          icon="user"
+          label="User ID"
+          value="demo-user"
+          colors={colors}
+        />
         <SettingRow
           icon="smartphone"
           label="Input Mode"
@@ -272,7 +304,15 @@ const styles = StyleSheet.create({
     fontFamily: "Inter_400Regular",
     color: "#FFFFFF60",
   },
+  syncDot: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+  },
   syncBadge: {
+    flexDirection: "row" as const,
+    alignItems: "center" as const,
+    gap: 5,
     paddingHorizontal: 10,
     paddingVertical: 5,
     borderRadius: 100,
@@ -280,7 +320,6 @@ const styles = StyleSheet.create({
   syncText: {
     fontSize: 11,
     fontFamily: "Inter_500Medium",
-    color: "#88D3C3",
   },
   section: {
     gap: 8,
