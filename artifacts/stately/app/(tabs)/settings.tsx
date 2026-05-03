@@ -6,6 +6,7 @@ import {
   ScrollView,
   Switch,
   Platform,
+  TouchableOpacity,
 } from "react-native";
 import { Feather } from "@expo/vector-icons";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -13,6 +14,7 @@ import * as Haptics from "expo-haptics";
 import { useColors } from "@/hooks/useColors";
 import { useRecords } from "@/context/RecordsContext";
 import { useAuth } from "@/context/AuthContext";
+import { clearLocalAppState } from "@/utils/storage";
 
 type FeatherIconName = keyof typeof Feather.glyphMap;
 
@@ -38,12 +40,7 @@ function SettingRow({
   colors,
 }: SettingRowProps) {
   return (
-    <View
-      style={[
-        styles.row,
-        { borderBottomColor: colors.border },
-      ]}
-    >
+    <View style={[styles.row, { borderBottomColor: colors.border }]}> 
       <View
         style={[
           styles.rowIcon,
@@ -67,11 +64,7 @@ function SettingRow({
       >
         {label}
       </Text>
-      {value && (
-        <Text style={[styles.rowValue, { color: colors.mutedForeground }]}>
-          {value}
-        </Text>
-      )}
+      {value && <Text style={[styles.rowValue, { color: colors.mutedForeground }]}>{value}</Text>}
       {toggle && onToggle && (
         <Switch
           value={checked}
@@ -84,9 +77,7 @@ function SettingRow({
           disabled={disabled}
         />
       )}
-      {!toggle && !value && (
-        <Feather name="chevron-right" size={15} color={colors.mutedForeground} />
-      )}
+      {!toggle && !value && <Feather name="chevron-right" size={15} color={colors.mutedForeground} />}
     </View>
   );
 }
@@ -102,9 +93,7 @@ function SettingSection({
 }) {
   return (
     <View style={styles.section}>
-      <Text style={[styles.sectionTitle, { color: colors.mutedForeground }]}>
-        {title}
-      </Text>
+      <Text style={[styles.sectionTitle, { color: colors.mutedForeground }]}>{title}</Text>
       <View
         style={[
           styles.sectionCard,
@@ -124,16 +113,20 @@ function SettingSection({
 export default function SettingsScreen() {
   const colors = useColors();
   const insets = useSafeAreaInsets();
-  const { source } = useRecords();
-  const { user, signOut } = useAuth();
+  const { source, clear } = useRecords();
+  const { user, signOut, authLoading } = useAuth();
   const [morningReminder, setMorningReminder] = useState(false);
   const isFirestore = source === "firestore";
 
   const handleSignOut = async () => {
     await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     await signOut();
-    const { router } = await import("expo-router");
-    router.replace("/login");
+  };
+
+  const handleResetLocalState = async () => {
+    await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    await clear();
+    await clearLocalAppState();
   };
 
   const topPadding = Platform.OS === "web" ? 67 : insets.top;
@@ -144,16 +137,11 @@ export default function SettingsScreen() {
       style={[styles.container, { backgroundColor: colors.background }]}
       contentContainerStyle={[
         styles.content,
-        {
-          paddingTop: topPadding + 16,
-          paddingBottom: bottomPadding + 100,
-        },
+        { paddingTop: topPadding + 16, paddingBottom: bottomPadding + 100 },
       ]}
       showsVerticalScrollIndicator={false}
     >
-      <Text style={[styles.title, { color: colors.foreground }]}>
-        Settings
-      </Text>
+      <Text style={[styles.title, { color: colors.foreground }]}>Settings</Text>
 
       <View
         style={[
@@ -198,46 +186,29 @@ export default function SettingsScreen() {
         </View>
       </View>
 
+      <View
+        style={[
+          styles.debugCard,
+          {
+            backgroundColor: colors.card,
+            borderColor: colors.border,
+            borderRadius: colors.radius ?? 16,
+          },
+        ]}
+      >
+        <Text style={[styles.sectionTitle, { color: colors.mutedForeground }]}>DEBUG</Text>
+        <Text style={[styles.debugText, { color: colors.foreground }]}>authLoading: {String(authLoading)}</Text>
+        <Text style={[styles.debugText, { color: colors.foreground }]}>user email: {user?.email ?? "null"}</Text>
+        <Text style={[styles.debugText, { color: colors.foreground }]}>user uid: {user?.uid ?? "null"}</Text>
+      </View>
+
       <SettingSection title="DATA SYNC" colors={colors}>
-        <SettingRow
-          icon="database"
-          label="Storage"
-          value={isFirestore ? "Firebase Firestore" : "Local only"}
-          colors={colors}
-        />
-        <SettingRow
-          icon="user"
-          label="Account"
-          value={user?.email ?? "—"}
-          colors={colors}
-        />
-        <SettingRow
-          icon="smartphone"
-          label="Input Mode"
-          value="Manual"
-          colors={colors}
-        />
-        <SettingRow
-          icon="heart"
-          label="Apple Health"
-          value="Coming soon"
-          disabled
-          colors={colors}
-        />
-        <SettingRow
-          icon="activity"
-          label="Samsung Health"
-          value="Coming soon"
-          disabled
-          colors={colors}
-        />
-        <SettingRow
-          icon="watch"
-          label="Google Fit"
-          value="Coming soon"
-          disabled
-          colors={colors}
-        />
+        <SettingRow icon="database" label="Storage" value={isFirestore ? "Firebase Firestore" : "Local only"} colors={colors} />
+        <SettingRow icon="user" label="Account" value={user?.email ?? "—"} colors={colors} />
+        <SettingRow icon="smartphone" label="Input Mode" value="Manual" colors={colors} />
+        <SettingRow icon="heart" label="Apple Health" value="Coming soon" disabled colors={colors} />
+        <SettingRow icon="activity" label="Samsung Health" value="Coming soon" disabled colors={colors} />
+        <SettingRow icon="watch" label="Google Fit" value="Coming soon" disabled colors={colors} />
       </SettingSection>
 
       <SettingSection title="NOTIFICATIONS" colors={colors}>
@@ -249,14 +220,7 @@ export default function SettingsScreen() {
           onToggle={setMorningReminder}
           colors={colors}
         />
-        {morningReminder && (
-          <SettingRow
-            icon="clock"
-            label="Reminder Time"
-            value="7:00 AM"
-            colors={colors}
-          />
-        )}
+        {morningReminder && <SettingRow icon="clock" label="Reminder Time" value="7:00 AM" colors={colors} />}
       </SettingSection>
 
       <SettingSection title="ABOUT" colors={colors}>
@@ -283,13 +247,29 @@ export default function SettingsScreen() {
         <Text style={styles.signOutText}>Sign Out</Text>
       </TouchableOpacity>
 
+      <TouchableOpacity
+        style={[
+          styles.resetButton,
+          {
+            backgroundColor: colors.card,
+            borderColor: colors.border,
+            borderRadius: colors.radius ?? 16,
+          },
+        ]}
+        onPress={handleResetLocalState}
+        activeOpacity={0.8}
+      >
+        <View style={[styles.resetIcon, { backgroundColor: `${colors.primary}18` }]}>
+          <Feather name="trash-2" size={15} color={colors.primary} />
+        </View>
+        <Text style={[styles.resetText, { color: colors.foreground }]}>Reset Local App State</Text>
+      </TouchableOpacity>
+
       <View style={styles.footer}>
         <View style={[styles.footerLogo, { backgroundColor: colors.navy }]}>
           <Feather name="activity" size={14} color={colors.primary} />
         </View>
-        <Text style={[styles.footerText, { color: colors.mutedForeground }]}>
-          Stately — Clarity for your body.
-        </Text>
+        <Text style={[styles.footerText, { color: colors.mutedForeground }]}>Stately — Clarity for your body.</Text>
       </View>
     </ScrollView>
   );
@@ -341,8 +321,8 @@ const styles = StyleSheet.create({
     borderRadius: 3,
   },
   syncBadge: {
-    flexDirection: "row" as const,
-    alignItems: "center" as const,
+    flexDirection: "row",
+    alignItems: "center",
     gap: 5,
     paddingHorizontal: 10,
     paddingVertical: 5,
@@ -351,6 +331,15 @@ const styles = StyleSheet.create({
   syncText: {
     fontSize: 11,
     fontFamily: "Inter_500Medium",
+  },
+  debugCard: {
+    borderWidth: 1,
+    padding: 16,
+    gap: 6,
+  },
+  debugText: {
+    fontSize: 12,
+    fontFamily: "Inter_400Regular",
   },
   section: {
     gap: 8,
@@ -411,6 +400,24 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontFamily: "Inter_500Medium",
     color: "#F87171",
+  },
+  resetButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 12,
+    padding: 16,
+    borderWidth: 1,
+  },
+  resetIcon: {
+    width: 30,
+    height: 30,
+    borderRadius: 8,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  resetText: {
+    fontSize: 14,
+    fontFamily: "Inter_500Medium",
   },
   footer: {
     flexDirection: "row",

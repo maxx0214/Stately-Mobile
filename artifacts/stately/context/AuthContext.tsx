@@ -1,18 +1,8 @@
-import React, {
-  createContext,
-  useContext,
-  useEffect,
-  useState,
-  ReactNode,
-} from "react";
-import {
-  User,
-  createUserWithEmailAndPassword,
-  onAuthStateChanged,
-  signInWithEmailAndPassword,
-  signOut as fbSignOut,
-} from "firebase/auth";
+import React, { createContext, useContext, useEffect, useState, ReactNode } from "react";
+import { User, createUserWithEmailAndPassword, onAuthStateChanged, signInWithEmailAndPassword, signOut as fbSignOut } from "firebase/auth";
+import { router } from "expo-router";
 import { auth } from "@/lib/firebase";
+import { clearRecordsCache } from "@/utils/storage";
 
 interface AuthContextType {
   user: User | null;
@@ -51,7 +41,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   const signOut = async () => {
-    await fbSignOut(auth);
+    setAuthLoading(true);
+    try {
+      await fbSignOut(auth);
+      setUser(null);
+      await clearRecordsCache();
+      router.replace("/login");
+    } finally {
+      setAuthLoading(false);
+    }
   };
 
   return (

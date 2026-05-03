@@ -1,12 +1,6 @@
-import React, {
-  createContext,
-  useContext,
-  useEffect,
-  useState,
-  ReactNode,
-} from "react";
+import React, { createContext, useContext, useEffect, useState, ReactNode } from "react";
 import { DailyRecord } from "@/types/DailyRecord";
-import { loadRecords, saveRecord } from "@/utils/storage";
+import { clearRecordsCache, loadRecords, saveRecord } from "@/utils/storage";
 import { getDailyRecords, saveDailyRecord } from "@/services/firestore";
 import { useAuth } from "@/context/AuthContext";
 
@@ -18,6 +12,7 @@ interface RecordsContextType {
   loading: boolean;
   source: DataSource;
   refresh: () => Promise<void>;
+  clear: () => Promise<void>;
 }
 
 const RecordsContext = createContext<RecordsContextType>({
@@ -26,6 +21,7 @@ const RecordsContext = createContext<RecordsContextType>({
   loading: true,
   source: "local",
   refresh: async () => {},
+  clear: async () => {},
 });
 
 export function RecordsProvider({ children }: { children: ReactNode }) {
@@ -69,14 +65,18 @@ export function RecordsProvider({ children }: { children: ReactNode }) {
         console.warn("[Stately] Firestore write failed, saving locally only:", err);
       }
     }
-    // Always mirror to AsyncStorage as offline backup
     await saveRecord(record);
     await load();
   };
 
+  const clear = async () => {
+    setRecords([]);
+    await clearRecordsCache();
+  };
+
   return (
     <RecordsContext.Provider
-      value={{ records, addRecord, loading, source, refresh: load }}
+      value={{ records, addRecord, loading, source, refresh: load, clear }}
     >
       {children}
     </RecordsContext.Provider>

@@ -25,6 +25,15 @@ export async function saveRecord(record: DailyRecord): Promise<void> {
   await AsyncStorage.setItem(RECORDS_KEY, JSON.stringify(records));
 }
 
+export async function clearRecordsCache(): Promise<void> {
+  await AsyncStorage.removeItem(RECORDS_KEY);
+}
+
+export async function clearLocalAppState(): Promise<void> {
+  const keys = [RECORDS_KEY, ONBOARDED_KEY];
+  await AsyncStorage.multiRemove(keys);
+}
+
 export async function isOnboarded(): Promise<boolean> {
   try {
     const value = await AsyncStorage.getItem(ONBOARDED_KEY);
