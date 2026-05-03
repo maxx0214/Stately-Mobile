@@ -4,20 +4,16 @@ export function generateAdvice(
   sleepScore: number,
   hrvScore: number
 ): string {
-  let base = "";
+  let base: string;
 
   if (conditionScore >= 85) {
-    base =
-      "Your body looks well recovered today. A productive training day is possible.";
+    base = "오늘은 컨디션이 매우 좋아요. 활발하게 움직여보면 좋겠어요.";
   } else if (conditionScore >= 70) {
-    base =
-      "You are in good condition. Keep your workout moderate and stay hydrated.";
+    base = "전반적으로 좋은 컨디션이에요. 오늘도 꾸준히 움직여보세요.";
   } else if (conditionScore >= 50) {
-    base =
-      "Your body shows some fatigue. Choose light cardio or mobility work today.";
+    base = "몸이 조금 지쳐있는 것 같아요. 무리하지 않고 천천히 시작해보세요.";
   } else {
-    base =
-      "Recovery should be your priority today. Reduce training intensity and focus on sleep.";
+    base = "오늘은 회복을 우선해보세요. 충분한 휴식이 도움이 될 수 있어요.";
   }
 
   const scores: Record<string, number> = {
@@ -30,18 +26,15 @@ export function generateAdvice(
     a[1] < b[1] ? a : b
   );
 
-  let extra = "";
   if (weakest[0] === "sleep" && sleepScore < 70) {
-    extra =
-      " Sleep recovery is your limiting factor — prioritize rest tonight.";
-  } else if (weakest[0] === "hrv" && hrvScore < 60) {
-    extra =
-      " Your HRV signal is low — reduce caffeine and prioritize relaxation.";
-  } else if (weakest[0] === "activity" && activityScore > 110) {
-    extra = " High activity load detected — watch for accumulated fatigue.";
-  } else if (weakest[0] === "activity" && activityScore < 30) {
-    extra = " A short walk or light movement would help boost your energy.";
+    return "어젯밤 수면이 충분하지 않았을 수 있어요. " + base;
+  }
+  if (weakest[0] === "hrv" && hrvScore < 60) {
+    return "신체 회복이 필요한 상태예요. 가벼운 스트레칭이나 명상을 해보면 좋겠어요.";
+  }
+  if (weakest[0] === "activity" && activityScore < 30) {
+    return base + " 짧은 산책부터 시작해보면 어떨까요?";
   }
 
-  return base + extra;
+  return base;
 }

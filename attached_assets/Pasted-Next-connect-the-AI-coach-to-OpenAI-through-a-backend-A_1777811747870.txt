@@ -1,0 +1,110 @@
+Next, connect the AI coach to OpenAI through a backend API.
+
+Current state:
+- Expo React Native app is working
+- Firebase Auth is working
+- Firestore is working
+- Daily records are stored under users/{uid}/daily/{YYYY-MM-DD}
+- The app calculates condition score locally
+- The app currently uses rule-based AI coach messages
+- UI design is already good
+
+Important:
+Do NOT expose the OpenAI API key in the Expo frontend.
+The frontend must call a backend endpoint.
+The backend must call OpenAI using a Replit Secret named OPENAI_API_KEY.
+
+Goal:
+Create a real AI coach backend while keeping the current rule-based advice as fallback.
+
+Requirements:
+
+1. Create backend endpoint:
+POST /api/ai-coach
+
+2. Frontend should send:
+- conditionScore
+- conditionLabel
+- activityScore
+- sleepScore
+- hrvScore
+- hrvReliability
+- weakestMetric
+
+3. Backend should:
+- Check if OPENAI_API_KEY exists
+- If OPENAI_API_KEY exists, call OpenAI
+- If OPENAI_API_KEY is missing or the API call fails, use the existing rule-based fallback advice
+- Return:
+{
+  "advice": "...",
+  "source": "openai" or "fallback"
+}
+
+4. AI coach style:
+- Korean language
+- Warm, gentle, and supportive
+- Recommendation-style, not command-style
+- Not medical diagnosis
+- No disease claims
+- Under 2 short sentences
+- Sounds like a calm health coach, not a doctor
+
+Use this prompt for OpenAI:
+
+You are a gentle Korean condition coach for an app called Stately.
+
+Based on the user's daily condition data, write one short Korean advice message.
+
+Rules:
+- Write in Korean.
+- Be warm, calm, and supportive.
+- Do not sound medical or diagnostic.
+- Do not make disease claims.
+- Use recommendation-style language.
+- Keep it under 2 short sentences.
+- Mention the weakest metric if useful.
+- Do not mention exact formulas or weights.
+- Use expressions like:
+  - “해보면 좋겠어요”
+  - “도움이 될 수 있어요”
+  - “무리하지 않아도 괜찮아요”
+  - “천천히 시작해보세요”
+  - “오늘은 회복을 우선해보세요”
+
+Data:
+Condition score: {{conditionScore}}
+Condition label: {{conditionLabel}}
+Activity score: {{activityScore}}
+Sleep score: {{sleepScore}}
+HRV score: {{hrvScore}}
+HRV reliability: {{hrvReliability}}
+Weakest metric: {{weakestMetric}}
+
+5. When the user submits the Daily Input form:
+- Calculate the condition score as before
+- Request AI advice from /api/ai-coach
+- If API fails, use fallback rule-based advice
+- Save the DailyRecord to Firestore with:
+  ai: {
+    advice: string,
+    cached: true,
+    source: "openai" or "fallback"
+  }
+
+6. Do not change:
+- UI design
+- Firebase Auth flow
+- Firestore path
+- Condition score formula
+
+7. Add loading state while generating AI advice:
+- Show something like “AI 코치가 오늘의 컨디션을 정리하고 있어요...”
+- Keep it subtle and premium
+
+8. After implementing, explain:
+- which files were added
+- which files were modified
+- how to add OPENAI_API_KEY to Replit Secrets
+- how fallback works
+- how to test whether OpenAI is being used

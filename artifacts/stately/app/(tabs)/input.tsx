@@ -17,6 +17,7 @@ import { useColors } from "@/hooks/useColors";
 import { useRecords } from "@/context/RecordsContext";
 import { calculateCondition } from "@/utils/calculateCondition";
 import { generateAdvice } from "@/utils/generateAdvice";
+import { fetchAiCoachAdvice } from "@/services/aiCoach";
 import { DailyRecord } from "@/types/DailyRecord";
 
 type HrvReliability = "green" | "amber" | "red";
@@ -46,6 +47,7 @@ export default function InputScreen() {
   const [hrv, setHrv] = useState("");
   const [hrvReliability, setHrvReliability] = useState<HrvReliability>("green");
   const [submitting, setSubmitting] = useState(false);
+  const [statusMsg, setStatusMsg] = useState<string | null>(null);
 
   const topPadding = Platform.OS === "web" ? 67 : insets.top;
 
@@ -75,6 +77,7 @@ export default function InputScreen() {
     }
 
     setSubmitting(true);
+    setStatusMsg("컨디션 점수 계산 중...");
     await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
 
     const result = calculateCondition({
@@ -87,12 +90,41 @@ export default function InputScreen() {
       hrvReliability,
     });
 
-    const advice = generateAdvice(
-      result.conditionScore,
-      result.activityScore,
-      result.sleepScore,
-      result.hrvScore
-    );
+    const scores: Record<string, number> = {
+      activity: result.activityScore,
+      sleep: result.sleepScore,
+      hrv: result.hrvScore,
+    };
+    const weakestMetric = Object.entries(scores).reduce((a, b) =>
+      a[1] < b[1] ? a : b
+    )[0] as "activity" | "sleep" | "hrv";
+
+    setStatusMsg("AI 코치가 오늘의 컨디션을 정리하고 있어요...");
+
+    let advice: string;
+    let aiSource: "openai" | "fallback";
+
+    try {
+      const aiRes = await fetchAiCoachAdvice({
+        conditionScore: result.conditionScore,
+        conditionLabel: result.label,
+        activityScore: result.activityScore,
+        sleepScore: result.sleepScore,
+        hrvScore: result.hrvScore,
+        hrvReliability,
+        weakestMetric,
+      });
+      advice = aiRes.advice;
+      aiSource = aiRes.source;
+    } catch {
+      advice = generateAdvice(
+        result.conditionScore,
+        result.activityScore,
+        result.sleepScore,
+        result.hrvScore
+      );
+      aiSource = "fallback";
+    }
 
     const today = new Date().toISOString().split("T")[0];
     const id = `${Date.now()}${Math.random().toString(36).substr(2, 9)}`;
@@ -124,6 +156,7 @@ export default function InputScreen() {
       ai: {
         advice,
         cached: true,
+        source: aiSource,
       },
       flags: {
         ready_for_morning: true,
@@ -133,6 +166,7 @@ export default function InputScreen() {
 
     await addRecord(record);
     setSubmitting(false);
+    setStatusMsg(null);
     await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
     router.replace("/(tabs)");
   };
@@ -269,7 +303,7 @@ export default function InputScreen() {
         activeOpacity={0.85}
       >
         <Feather
-          name="bar-chart-2"
+          name={submitting ? "loader" : "bar-chart-2"}
           size={18}
           color={submitting ? colors.mutedForeground : colors.primary}
         />
@@ -281,7 +315,7 @@ export default function InputScreen() {
             },
           ]}
         >
-          {submitting ? "Calculating..." : "Calculate Condition"}
+          {statusMsg ?? "Calculate Condition"}
         </Text>
       </TouchableOpacity>
     </ScrollView>

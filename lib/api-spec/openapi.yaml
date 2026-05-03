@@ -10,6 +10,8 @@ servers:
 tags:
   - name: health
     description: Health operations
+  - name: ai
+    description: AI coach operations
 paths:
   /healthz:
     get:
@@ -24,6 +26,27 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/HealthStatus"
+  /ai-coach:
+    post:
+      operationId: getAiCoachAdvice
+      tags: [ai]
+      summary: Get AI coach advice
+      description: Returns a personalized Korean coaching message based on the user's daily condition data. Falls back to rule-based advice if OpenAI is unavailable.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AiCoachRequest"
+      responses:
+        "200":
+          description: Advice generated successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AiCoachResponse"
+        "400":
+          description: Invalid request body
 components:
   schemas:
     HealthStatus:
@@ -33,4 +56,43 @@ components:
           type: string
       required:
         - status
-
+    AiCoachRequest:
+      type: object
+      properties:
+        conditionScore:
+          type: number
+          minimum: 0
+          maximum: 100
+        conditionLabel:
+          type: string
+        activityScore:
+          type: number
+        sleepScore:
+          type: number
+        hrvScore:
+          type: number
+        hrvReliability:
+          type: string
+          enum: [green, amber, red]
+        weakestMetric:
+          type: string
+          enum: [activity, sleep, hrv]
+      required:
+        - conditionScore
+        - conditionLabel
+        - activityScore
+        - sleepScore
+        - hrvScore
+        - hrvReliability
+        - weakestMetric
+    AiCoachResponse:
+      type: object
+      properties:
+        advice:
+          type: string
+        source:
+          type: string
+          enum: [openai, fallback]
+      required:
+        - advice
+        - source
