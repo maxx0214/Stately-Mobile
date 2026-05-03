@@ -1,0 +1,86 @@
+Now let's connect Stately to our real service stack step by step.
+
+First, connect Firebase Firestore.
+
+Current state:
+- The app already has Home, Input, History, Settings screens.
+- It calculates condition score locally.
+- It stores daily records using AsyncStorage.
+- The UI is already good, so do not redesign it.
+
+Goal:
+Replace or extend AsyncStorage with Firebase Firestore persistence.
+
+Requirements:
+1. Install and configure Firebase for React Native Expo.
+2. Create a firebase config file.
+3. Create a Firestore service file.
+4. Use this Firestore path:
+   users/{uid}/daily/{YYYY-MM-DD}
+
+For now, before Firebase Auth is added, use:
+uid = "demo-user"
+
+5. Add these functions:
+   - saveDailyRecord(uid, record)
+   - getDailyRecords(uid)
+   - getTodayRecord(uid, date)
+   - deleteDailyRecord(uid, date) if useful
+
+6. When the user submits the Daily Input form:
+   - calculate the condition score as before
+   - generate AI advice as before
+   - save the full DailyRecord to Firestore
+   - update Home immediately
+   - update History from Firestore
+
+7. Keep AsyncStorage only as a fallback if needed.
+8. Do not change the condition score calculation logic.
+9. Do not change the UI design.
+10. Keep the Apple-like minimal premium style.
+
+DailyRecord structure:
+
+{
+  id: string;
+  date: string;
+  activity: {
+    activeKcal: number;
+    goalKcal: number;
+    score: number;
+  };
+  sleep: {
+    hours: number;
+    efficiency: number;
+    deepSleepScore: number;
+    score: number;
+  };
+  hrv: {
+    value: number;
+    reliability: "green" | "amber" | "red";
+    score: number;
+  };
+  condition: {
+    score: number;
+    label: string;
+    weights: {
+      activity: number;
+      sleep: number;
+      hrv: number;
+    };
+  };
+  ai: {
+    advice: string;
+    cached: boolean;
+  };
+  flags: {
+    ready_for_morning: boolean;
+    completed: boolean;
+  };
+}
+
+After implementing, explain:
+- which files were added
+- which files were modified
+- how to add Firebase config values
+- how to test that Firestore saving works
