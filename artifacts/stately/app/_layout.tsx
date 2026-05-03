@@ -14,6 +14,7 @@ import { KeyboardProvider } from "react-native-keyboard-controller";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 
 import { ErrorBoundary } from "@/components/ErrorBoundary";
+import { AuthProvider } from "@/context/AuthContext";
 import { RecordsProvider } from "@/context/RecordsContext";
 
 SplashScreen.preventAutoHideAsync();
@@ -26,6 +27,10 @@ function RootLayoutNav() {
       <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
       <Stack.Screen
         name="onboarding"
+        options={{ headerShown: false, gestureEnabled: false }}
+      />
+      <Stack.Screen
+        name="login"
         options={{ headerShown: false, gestureEnabled: false }}
       />
     </Stack>
@@ -54,9 +59,11 @@ export default function RootLayout() {
         <QueryClientProvider client={queryClient}>
           <GestureHandlerRootView style={{ flex: 1 }}>
             <KeyboardProvider>
-              <RecordsProvider>
-                <RootLayoutNav />
-              </RecordsProvider>
+              <AuthProvider>
+                <RecordsProvider>
+                  <RootLayoutNav />
+                </RecordsProvider>
+              </AuthProvider>
             </KeyboardProvider>
           </GestureHandlerRootView>
         </QueryClientProvider>

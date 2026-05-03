@@ -38,7 +38,7 @@ export default function OnboardingScreen() {
   const handleGetStarted = async () => {
     await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     await setOnboarded();
-    router.replace("/(tabs)");
+    router.replace("/login");
   };
 
   const topPadding = Platform.OS === "web" ? 67 : insets.top;
@@ -113,12 +113,8 @@ const styles = StyleSheet.create({
     paddingHorizontal: 28,
     justifyContent: "space-between",
   },
-  top: {
-    gap: 12,
-  },
-  logoRow: {
-    marginBottom: 8,
-  },
+  top: { gap: 12 },
+  logoRow: { marginBottom: 8 },
   logoMark: {
     width: 52,
     height: 52,
@@ -145,14 +141,8 @@ const styles = StyleSheet.create({
     lineHeight: 24,
     marginTop: 4,
   },
-  features: {
-    gap: 20,
-  },
-  featureRow: {
-    flexDirection: "row",
-    gap: 16,
-    alignItems: "flex-start",
-  },
+  features: { gap: 20 },
+  featureRow: { flexDirection: "row", gap: 16, alignItems: "flex-start" },
   featureIcon: {
     width: 40,
     height: 40,
@@ -161,10 +151,7 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     flexShrink: 0,
   },
-  featureText: {
-    flex: 1,
-    gap: 4,
-  },
+  featureText: { flex: 1, gap: 4 },
   featureTitle: {
     fontSize: 15,
     fontFamily: "Inter_600SemiBold",
@@ -176,10 +163,7 @@ const styles = StyleSheet.create({
     color: "#FFFFFF80",
     lineHeight: 20,
   },
-  bottom: {
-    gap: 16,
-    alignItems: "center",
-  },
+  bottom: { gap: 16, alignItems: "center" },
   mvpNote: {
     fontSize: 11,
     fontFamily: "Inter_400Regular",
@@ -199,8 +183,5 @@ const styles = StyleSheet.create({
     shadowRadius: 12,
     elevation: 6,
   },
-  buttonText: {
-    fontSize: 17,
-    fontFamily: "Inter_600SemiBold",
-  },
+  buttonText: { fontSize: 17, fontFamily: "Inter_600SemiBold" },
 });

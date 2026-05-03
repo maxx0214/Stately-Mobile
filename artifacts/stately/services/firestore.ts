@@ -9,8 +9,6 @@ import {
 import { db } from "@/lib/firebase";
 import { DailyRecord } from "@/types/DailyRecord";
 
-export const DEMO_UID = "demo-user";
-
 function dailyRef(uid: string, date: string) {
   return doc(db, "users", uid, "daily", date);
 }

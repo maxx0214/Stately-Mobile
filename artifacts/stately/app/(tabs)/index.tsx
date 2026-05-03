@@ -13,6 +13,7 @@ import { Feather } from "@expo/vector-icons";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useColors } from "@/hooks/useColors";
 import { useRecords } from "@/context/RecordsContext";
+import { useAuth } from "@/context/AuthContext";
 import { isOnboarded } from "@/utils/storage";
 import { ScoreCard } from "@/components/ScoreCard";
 import { MetricCard } from "@/components/MetricCard";
@@ -31,16 +32,20 @@ export default function HomeScreen() {
   const colors = useColors();
   const insets = useSafeAreaInsets();
   const { records, loading, refresh } = useRecords();
+  const { user, authLoading } = useAuth();
 
   const topPadding = Platform.OS === "web" ? 67 : insets.top;
 
   useEffect(() => {
+    if (authLoading) return;
     isOnboarded().then((onboarded) => {
       if (!onboarded) {
         router.replace("/onboarding");
+      } else if (!user) {
+        router.replace("/login");
       }
     });
-  }, []);
+  }, [user, authLoading]);
 
   const latest = records[0] ?? null;
 
@@ -69,9 +74,7 @@ export default function HomeScreen() {
             Your Condition
           </Text>
         </View>
-        <View
-          style={[styles.logoMark, { backgroundColor: colors.navy }]}
-        >
+        <View style={[styles.logoMark, { backgroundColor: colors.navy }]}>
           <Feather name="activity" size={16} color={colors.primary} />
         </View>
       </View>
@@ -117,19 +120,14 @@ export default function HomeScreen() {
       ) : (
         <View style={styles.emptyState}>
           <View
-            style={[
-              styles.emptyIcon,
-              { backgroundColor: colors.secondary },
-            ]}
+            style={[styles.emptyIcon, { backgroundColor: colors.secondary }]}
           >
             <Feather name="plus-circle" size={32} color={colors.primary} />
           </View>
           <Text style={[styles.emptyTitle, { color: colors.foreground }]}>
             No data yet
           </Text>
-          <Text
-            style={[styles.emptyDesc, { color: colors.mutedForeground }]}
-          >
+          <Text style={[styles.emptyDesc, { color: colors.mutedForeground }]}>
             Add today's activity, sleep, and HRV to see your condition score.
           </Text>
           <TouchableOpacity
@@ -165,7 +163,11 @@ export default function HomeScreen() {
           <Text style={[styles.addDataText, { color: colors.foreground }]}>
             Update Today's Data
           </Text>
-          <Feather name="chevron-right" size={16} color={colors.mutedForeground} />
+          <Feather
+            name="chevron-right"
+            size={16}
+            color={colors.mutedForeground}
+          />
         </TouchableOpacity>
       )}
     </ScrollView>
@@ -173,13 +175,8 @@ export default function HomeScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-  },
-  content: {
-    paddingHorizontal: 20,
-    gap: 20,
-  },
+  container: { flex: 1 },
+  content: { paddingHorizontal: 20, gap: 20 },
   header: {
     flexDirection: "row",
     alignItems: "center",
@@ -212,10 +209,7 @@ const styles = StyleSheet.create({
     fontFamily: "Inter_600SemiBold",
     letterSpacing: 0.1,
   },
-  metricsRow: {
-    flexDirection: "row",
-    gap: 10,
-  },
+  metricsRow: { flexDirection: "row", gap: 10 },
   emptyState: {
     alignItems: "center",
     gap: 14,
@@ -230,10 +224,7 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     marginBottom: 4,
   },
-  emptyTitle: {
-    fontSize: 20,
-    fontFamily: "Inter_700Bold",
-  },
+  emptyTitle: { fontSize: 20, fontFamily: "Inter_700Bold" },
   emptyDesc: {
     fontSize: 14,
     fontFamily: "Inter_400Regular",
@@ -248,10 +239,7 @@ const styles = StyleSheet.create({
     paddingVertical: 14,
     marginTop: 8,
   },
-  addButtonText: {
-    fontSize: 15,
-    fontFamily: "Inter_600SemiBold",
-  },
+  addButtonText: { fontSize: 15, fontFamily: "Inter_600SemiBold" },
   addDataButton: {
     flexDirection: "row",
     alignItems: "center",
@@ -259,9 +247,5 @@ const styles = StyleSheet.create({
     padding: 16,
     borderWidth: 1,
   },
-  addDataText: {
-    flex: 1,
-    fontSize: 14,
-    fontFamily: "Inter_500Medium",
-  },
+  addDataText: { flex: 1, fontSize: 14, fontFamily: "Inter_500Medium" },
 });

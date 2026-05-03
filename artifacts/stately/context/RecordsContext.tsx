@@ -7,7 +7,8 @@ import React, {
 } from "react";
 import { DailyRecord } from "@/types/DailyRecord";
 import { loadRecords, saveRecord } from "@/utils/storage";
-import { getDailyRecords, saveDailyRecord, DEMO_UID } from "@/services/firestore";
+import { getDailyRecords, saveDailyRecord } from "@/services/firestore";
+import { useAuth } from "@/context/AuthContext";
 
 type DataSource = "firestore" | "local";
 
@@ -28,14 +29,22 @@ const RecordsContext = createContext<RecordsContextType>({
 });
 
 export function RecordsProvider({ children }: { children: ReactNode }) {
+  const { user } = useAuth();
+  const uid = user?.uid ?? null;
+
   const [records, setRecords] = useState<DailyRecord[]>([]);
   const [loading, setLoading] = useState(true);
   const [source, setSource] = useState<DataSource>("firestore");
 
   const load = async () => {
+    if (!uid) {
+      setRecords([]);
+      setLoading(false);
+      return;
+    }
     setLoading(true);
     try {
-      const firestoreRecords = await getDailyRecords(DEMO_UID);
+      const firestoreRecords = await getDailyRecords(uid);
       setRecords(firestoreRecords);
       setSource("firestore");
     } catch (err) {
@@ -50,13 +59,15 @@ export function RecordsProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     load();
-  }, []);
+  }, [uid]);
 
   const addRecord = async (record: DailyRecord) => {
-    try {
-      await saveDailyRecord(DEMO_UID, record);
-    } catch (err) {
-      console.warn("[Stately] Firestore write failed, saving locally only:", err);
+    if (uid) {
+      try {
+        await saveDailyRecord(uid, record);
+      } catch (err) {
+        console.warn("[Stately] Firestore write failed, saving locally only:", err);
+      }
     }
     // Always mirror to AsyncStorage as offline backup
     await saveRecord(record);
@@ -64,7 +75,9 @@ export function RecordsProvider({ children }: { children: ReactNode }) {
   };
 
   return (
-    <RecordsContext.Provider value={{ records, addRecord, loading, source, refresh: load }}>
+    <RecordsContext.Provider
+      value={{ records, addRecord, loading, source, refresh: load }}
+    >
       {children}
     </RecordsContext.Provider>
   );

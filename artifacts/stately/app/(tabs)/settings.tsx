@@ -12,6 +12,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import * as Haptics from "expo-haptics";
 import { useColors } from "@/hooks/useColors";
 import { useRecords } from "@/context/RecordsContext";
+import { useAuth } from "@/context/AuthContext";
 
 type FeatherIconName = keyof typeof Feather.glyphMap;
 
@@ -124,8 +125,16 @@ export default function SettingsScreen() {
   const colors = useColors();
   const insets = useSafeAreaInsets();
   const { source } = useRecords();
+  const { user, signOut } = useAuth();
   const [morningReminder, setMorningReminder] = useState(false);
   const isFirestore = source === "firestore";
+
+  const handleSignOut = async () => {
+    await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+    await signOut();
+    const { router } = await import("expo-router");
+    router.replace("/login");
+  };
 
   const topPadding = Platform.OS === "web" ? 67 : insets.top;
   const bottomPadding = Platform.OS === "web" ? 34 : insets.bottom;
@@ -159,8 +168,12 @@ export default function SettingsScreen() {
           <Feather name="user" size={24} color={colors.primary} />
         </View>
         <View style={styles.profileInfo}>
-          <Text style={styles.profileName}>Your Profile</Text>
-          <Text style={styles.profileSub}>MVP User</Text>
+          <Text style={styles.profileName} numberOfLines={1}>
+            {user?.email ?? "Your Account"}
+          </Text>
+          <Text style={styles.profileSub}>
+            {user?.uid ? `uid: ${user.uid.slice(0, 12)}…` : "Not signed in"}
+          </Text>
         </View>
         <View
           style={[
@@ -194,8 +207,8 @@ export default function SettingsScreen() {
         />
         <SettingRow
           icon="user"
-          label="User ID"
-          value="demo-user"
+          label="Account"
+          value={user?.email ?? "—"}
           colors={colors}
         />
         <SettingRow
@@ -251,6 +264,24 @@ export default function SettingsScreen() {
         <SettingRow icon="shield" label="Privacy Policy" colors={colors} />
         <SettingRow icon="help-circle" label="Help & Support" colors={colors} />
       </SettingSection>
+
+      <TouchableOpacity
+        style={[
+          styles.signOutButton,
+          {
+            backgroundColor: colors.card,
+            borderColor: "#F8717130",
+            borderRadius: colors.radius ?? 16,
+          },
+        ]}
+        onPress={handleSignOut}
+        activeOpacity={0.8}
+      >
+        <View style={[styles.signOutIcon, { backgroundColor: "#F8717115" }]}>
+          <Feather name="log-out" size={15} color="#F87171" />
+        </View>
+        <Text style={styles.signOutText}>Sign Out</Text>
+      </TouchableOpacity>
 
       <View style={styles.footer}>
         <View style={[styles.footerLogo, { backgroundColor: colors.navy }]}>
@@ -361,6 +392,25 @@ const styles = StyleSheet.create({
   rowValue: {
     fontSize: 13,
     fontFamily: "Inter_400Regular",
+  },
+  signOutButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 12,
+    padding: 16,
+    borderWidth: 1,
+  },
+  signOutIcon: {
+    width: 30,
+    height: 30,
+    borderRadius: 8,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  signOutText: {
+    fontSize: 14,
+    fontFamily: "Inter_500Medium",
+    color: "#F87171",
   },
   footer: {
     flexDirection: "row",
