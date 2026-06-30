@@ -102,7 +102,7 @@ export default function InputScreen() {
     setStatusMsg("AI 코치가 오늘의 컨디션을 정리하고 있어요...");
 
     let advice: string;
-    let aiSource: "openai" | "fallback";
+    let aiSource: "groq" | "gemini" | "openai" | "fallback";
 
     try {
       const aiRes = await fetchAiCoachAdvice({

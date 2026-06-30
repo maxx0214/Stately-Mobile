@@ -12,7 +12,7 @@ export interface AiCoachRequest {
 
 export interface AiCoachResponse {
   advice: string;
-  source: "openai" | "fallback";
+  source: "groq" | "gemini" | "openai" | "fallback";
 }
 
 function getApiBase(): string {

@@ -1,0 +1,107 @@
+Let's add Groq as the primary AI provider for Stately.
+
+Current state:
+- API server is in artifacts/api-server
+- AI coach route is artifacts/api-server/src/routes/ai-coach.ts
+- Current endpoint: POST /api/ai-coach
+- Current provider chain has Gemini, OpenAI, and local fallback
+- Gemini and OpenAI may fail because of quota/billing issues
+- Local fallback works
+- Frontend already calls /api/ai-coach
+- Firestore saves ai.source
+
+Goal:
+Add Groq as the first AI provider.
+
+Provider chain should become:
+Groq → Gemini → OpenAI → Local fallback
+
+Requirements:
+1. Use the existing OpenAI SDK if possible because Groq supports OpenAI-compatible API.
+2. Create a Groq client with:
+   baseURL: "https://api.groq.com/openai/v1"
+   apiKey: process.env.GROQ_API_KEY
+
+3. Read model from:
+   GROQ_MODEL
+
+4. If GROQ_MODEL is missing, default to:
+   llama-3.1-8b-instant
+
+5. Add environment variables:
+   GROQ_API_KEY
+   GROQ_MODEL
+
+6. Do not expose GROQ_API_KEY to the Expo frontend.
+   It must only be used in the backend.
+
+7. Update POST /api/ai-coach:
+   - If GROQ_API_KEY exists, call Groq first.
+   - If Groq succeeds, return:
+     {
+       "advice": "...",
+       "source": "groq"
+     }
+   - If Groq fails, try Gemini.
+   - If Gemini fails, try OpenAI.
+   - If all providers fail, return local Korean rule-based fallback:
+     {
+       "advice": "...",
+       "source": "fallback"
+     }
+
+8. Update all TypeScript types so ai.source supports:
+   "groq" | "gemini" | "openai" | "fallback"
+
+9. Keep the same AI coach prompt:
+   - Korean language
+   - Warm, gentle, and supportive
+   - Recommendation-style, not command-style
+   - Not medical diagnosis
+   - No disease claims
+   - Under 2 short sentences
+   - Mention the weakest metric if useful
+   - Do not mention exact formulas or weights
+
+10. Keep max output short:
+   - max_tokens around 120
+   - temperature around 0.7
+
+11. Add server logs:
+   - Groq call succeeded
+   - Groq call failed
+   - Gemini fallback attempted
+   - OpenAI fallback attempted
+   - Local fallback used
+   Do not log API keys.
+
+12. Update .env.example:
+   PORT=3000
+   GROQ_API_KEY=
+   GROQ_MODEL=llama-3.1-8b-instant
+   GEMINI_API_KEY=
+   GEMINI_MODEL=
+   OPENAI_API_KEY=
+
+13. Do not change:
+   - UI design
+   - Firebase Auth
+   - Firestore paths
+   - condition score logic
+   - endpoint path
+   - frontend API calling logic unless necessary
+
+14. After implementing, test:
+   POST /api/ai-coach
+
+Expected response:
+{
+  "advice": "...",
+  "source": "groq"
+}
+
+After implementing, explain:
+- which files changed
+- how to add GROQ_API_KEY
+- how to test with curl
+- how to confirm Firestore ai.source is "groq"

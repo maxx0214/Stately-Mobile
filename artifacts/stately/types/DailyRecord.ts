@@ -29,7 +29,7 @@ export interface DailyRecord {
   ai: {
     advice: string;
     cached: boolean;
-    source: "openai" | "fallback";
+    source: "groq" | "gemini" | "openai" | "fallback";
   };
   flags: {
     ready_for_morning: boolean;

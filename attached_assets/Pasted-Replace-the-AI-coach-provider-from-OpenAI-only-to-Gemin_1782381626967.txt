@@ -1,0 +1,86 @@
+Replace the AI coach provider from OpenAI-only to Gemini-first.
+
+Current project:
+- API server is in artifacts/api-server
+- AI coach route is artifacts/api-server/src/routes/ai-coach.ts
+- Current endpoint: POST /api/ai-coach
+- Current response shape:
+  {
+    "advice": string,
+    "source": "openai" | "fallback"
+  }
+- Current OpenAI call fails when quota is insufficient, then fallback is used.
+- Keep the current frontend unchanged if possible.
+
+Goal:
+Use Gemini API as the primary AI provider for the AI coach.
+
+Requirements:
+1. Install the official Google GenAI SDK:
+   @google/genai
+
+2. Read Gemini API key from backend environment variable:
+   GEMINI_API_KEY
+
+3. Do not expose GEMINI_API_KEY to the Expo frontend.
+   It must only exist in artifacts/api-server/.env.
+
+4. Update POST /api/ai-coach:
+   - If GEMINI_API_KEY exists, call Gemini first.
+   - If Gemini succeeds, return:
+     {
+       "advice": "...",
+       "source": "gemini"
+     }
+   - If Gemini fails, optionally try OpenAI if OPENAI_API_KEY exists.
+   - If OpenAI also fails or has quota errors, return Korean rule-based fallback:
+     {
+       "advice": "...",
+       "source": "fallback"
+     }
+
+5. Update TypeScript types so ai.source supports:
+   "gemini" | "openai" | "fallback"
+
+6. Use a lightweight Gemini model suitable for MVP text generation.
+   Prefer a Flash model.
+   Make the model name easy to change with an environment variable:
+   GEMINI_MODEL=gemini-3.5-flash
+   If that model is not available, fall back to a currently available Gemini Flash model.
+
+7. Keep the same AI coach prompt:
+   - Korean language
+   - Warm, gentle, and supportive
+   - Recommendation-style, not command-style
+   - Not medical diagnosis
+   - No disease claims
+   - Under 2 short sentences
+   - Mention the weakest metric if useful
+   - Do not mention exact formulas or weights
+
+8. Do not change:
+   - Firebase Auth
+   - Firestore paths
+   - condition score logic
+   - UI design
+   - endpoint path
+
+9. Add clear server logs:
+   - Gemini call succeeded
+   - Gemini call failed
+   - OpenAI fallback attempted
+   - Rule-based fallback used
+   Do not log API keys.
+
+10. Add .env.example update:
+   PORT=3000
+   GEMINI_API_KEY=
+   GEMINI_MODEL=gemini-3.5-flash
+   OPENAI_API_KEY=
+
+After implementing, explain:
+- which files changed
+- how to get a Gemini API key
+- where to put GEMINI_API_KEY
+- how to test with curl
+- how to confirm Firestore ai.source is "gemini"
