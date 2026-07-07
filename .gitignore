@@ -47,3 +47,14 @@ Thumbs.db
 # Replit
 .cache/
 .local/
+
+# Local secrets
+.env
+**/.env
+**/.env.local
+**/.env.development
+**/.env.production
+**/.env.test
+
+# Local Replit config
+.replit
