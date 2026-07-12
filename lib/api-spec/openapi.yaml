@@ -92,7 +92,7 @@ components:
           type: string
         source:
           type: string
-          enum: [openai, fallback]
+          enum: [groq, gemini, openai, fallback]
       required:
         - advice
         - source
